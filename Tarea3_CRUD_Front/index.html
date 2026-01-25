@@ -1,0 +1,148 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRUD Clientes | UNIANDES</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f4f6f9; font-family: 'Segoe UI', sans-serif; }
+        .card-header { background-color: #007bff; color: white; font-weight: bold; }
+        .btn-primary { background-color: #0056b3; border: none; }
+        .table thead { background-color: #343a40; color: white; }
+    </style>
+</head>
+<body>
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card shadow">
+                <div class="card-header text-center">
+                    👤 Registro de Cliente
+                </div>
+                <div class="card-body">
+                    <form id="formCliente">
+                        <div class="mb-2"><label>Cédula</label><input type="text" id="cedula" class="form-control" required></div>
+                        <div class="mb-2"><label>Nombres</label><input type="text" id="nombres" class="form-control" required></div>
+                        <div class="mb-2"><label>Apellidos</label><input type="text" id="apellidos" class="form-control" required></div>
+                        <div class="mb-2"><label>Fecha Nacimiento</label><input type="date" id="fechaNacimiento" class="form-control" required></div>
+                        <div class="mb-2"><label>Género</label>
+                            <select id="genero" class="form-select">
+                                <option value="Masculino">Masculino</option>
+                                <option value="Femenino">Femenino</option>
+                            </select>
+                        </div>
+                        <div class="mb-2"><label>Dirección</label><input type="text" id="direccion" class="form-control" required></div>
+                        <div class="mb-2"><label>Teléfono</label><input type="text" id="telefono" class="form-control" required></div>
+                        <div class="mb-2"><label>Correo</label><input type="email" id="correo" class="form-control" required></div>
+                        <div class="mb-3"><label>Estado</label>
+                            <select id="estado" class="form-select">
+                                <option value="true">Activo</option>
+                                <option value="false">Inactivo</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">💾 Guardar Cliente</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header">
+                    📋 Listado de Clientes
+                </div>
+                <div class="card-body">
+                    <table class="table table-hover text-center">
+                        <thead>
+                            <tr>
+                                <th>Cédula</th>
+                                <th>Nombre Completo</th>
+                                <th>Correo</th>
+                                <th>Estado</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaCuerpo">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ⚠️ IMPORTANTE: Verifica que este puerto sea el mismo de tu Swagger
+    const API_URL = "https://localhost:7022/api/Clientes";
+
+    // 1. FUNCIÓN CARGAR (Lee los datos de la API)
+    async function cargarClientes() {
+        try {
+            const respuesta = await fetch(API_URL);
+            const clientes = await respuesta.json();
+            
+            let html = "";
+            clientes.forEach(c => {
+                const estadoClass = c.estado ? "text-success" : "text-danger";
+                const estadoTexto = c.estado ? "Activo" : "Inactivo";
+                
+                html += `<tr>
+                            <td>${c.cedula}</td>
+                            <td>${c.nombres} ${c.apellidos}</td>
+                            <td>${c.correo}</td>
+                            <td class="${estadoClass} fw-bold">${estadoTexto}</td>
+                            <td>
+                                <button onclick="eliminarCliente(${c.id})" class="btn btn-sm btn-danger">🗑️</button>
+                            </td>
+                         </tr>`;
+            });
+            document.getElementById("tablaCuerpo").innerHTML = html;
+        } catch (error) {
+            console.error("Error:", error);
+            alert("⚠️ No se puede conectar a la API. Revisa que Visual Studio esté en 'Play'.");
+        }
+    }
+
+    // 2. FUNCIÓN GUARDAR (Envía datos a la API)
+    document.getElementById("formCliente").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        
+        const nuevoCliente = {
+            cedula: document.getElementById("cedula").value,
+            nombres: document.getElementById("nombres").value,
+            apellidos: document.getElementById("apellidos").value,
+            fechaNacimiento: document.getElementById("fechaNacimiento").value,
+            genero: document.getElementById("genero").value,
+            direccion: document.getElementById("direccion").value,
+            telefono: document.getElementById("telefono").value,
+            correo: document.getElementById("correo").value,
+            estado: document.getElementById("estado").value === "true"
+        };
+
+        await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(nuevoCliente)
+        });
+
+        alert("✅ Cliente guardado correctamente");
+        document.getElementById("formCliente").reset();
+        cargarClientes();
+    });
+
+    // 3. FUNCIÓN ELIMINAR
+    async function eliminarCliente(id) {
+        if(confirm("¿Seguro que quieres borrar este cliente?")) {
+            await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+            cargarClientes();
+        }
+    }
+
+    // Cargar la lista al abrir la página
+    cargarClientes();
+</script>
+
+</body>
+</html>

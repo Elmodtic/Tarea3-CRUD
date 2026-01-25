@@ -1,0 +1,6 @@
+@TareaCRUD_HostAddress = http://localhost:5007
+
+GET {{TareaCRUD_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
